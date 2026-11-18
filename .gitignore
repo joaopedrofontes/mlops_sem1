@@ -1,0 +1,23 @@
+# Materiais do professor (PDFs e documentos em data/docs)
+data/docs/*
+!data/docs/.gitkeep
+
+# Índice vetorial gerado (contém os textos extraídos dos PDFs)
+data/index/
+
+# Artefatos locais do MLflow (caso rode fora do Docker)
+mlruns/
+mlartifacts/
+*.db
+
+# Python / Ambientes virtuais
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Sistema / IDEs
+.DS_Store
+.vscode/
+.idea/

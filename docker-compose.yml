@@ -1,0 +1,103 @@
+services:
+  # ---------------------------------------------------------------
+  # LLM local (Ollama) - serve o modelo de chat e o de embeddings
+  # ---------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_NUM_PARALLEL=1      # CPU: processa uma requisição por vez (as demais esperam na fila)
+      - OLLAMA_KEEP_ALIVE=30m      # mantém o modelo carregado na memória
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Baixa os modelos uma única vez (ficam salvos no volume)
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_HOST=ollama:11434
+    entrypoint: ["sh", "-c", "ollama pull ${LLM_MODEL} && ollama pull ${EMBED_MODEL}"]
+    restart: "no"
+
+  # ---------------------------------------------------------------
+  # Servidor MLflow (tracking, traces, prompts, avaliações, registry)
+  # ---------------------------------------------------------------
+  mlflow:
+    build: .
+    command: >
+      mlflow server
+      --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts
+      --allowed-hosts "*"
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # ---------------------------------------------------------------
+  # Aplicação: chat Streamlit + scripts (ingestão, prompt, avaliação...)
+  # ---------------------------------------------------------------
+  app:
+    build: .
+    command: streamlit run src/app.py --server.address 0.0.0.0 --server.port 8501
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    env_file: .env
+    environment:
+      - HOME=/tmp
+      - USER=aluno
+      - PYTHONPATH=/app
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - OLLAMA_BASE_URL=http://ollama:11434/v1
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    depends_on:
+      mlflow:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------
+  # Model Serving: API REST do modelo registrado (alias "champion")
+  # Sobe só com: docker compose --profile serve up serve
+  # ---------------------------------------------------------------
+  serve:
+    build: .
+    profiles: ["serve"]
+    command: >
+      mlflow models serve
+      -m models:/rag-mlops@champion
+      --env-manager local
+      --host 0.0.0.0 --port 5001
+    env_file: .env
+    environment:
+      - HOME=/tmp
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - OLLAMA_BASE_URL=http://ollama:11434/v1
+    ports:
+      - "5001:5001"
+    depends_on:
+      mlflow:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+
+volumes:
+  ollama-models:
+  mlflow-data:

@@ -1,0 +1,5 @@
+mlflow==3.18.0
+openai>=1.40
+pypdf>=5.0
+numpy>=1.26
+streamlit>=1.40

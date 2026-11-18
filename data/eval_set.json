@@ -1,0 +1,109 @@
+[
+  {
+    "inputs": {"question": "O que é engenharia de dados?"},
+    "expectations": {
+      "resposta_esperada": "É o processo de projetar e manter sistemas que coletam, armazenam e processam dados de maneira escalável e eficiente.",
+      "palavras_chave": ["colet", "armazen", "process"],
+      "fonte": "2 - Introdução a Engenharia de Dados.pdf",
+      "paginas": [6]
+    }
+  },
+  {
+    "inputs": {"question": "Qual a diferença entre os formatos row-major e column-major? Dê exemplos."},
+    "expectations": {
+      "resposta_esperada": "Row-major é rápido para acessar linhas inteiras (ex.: CSV, jsonl); column-major é rápido para acessar colunas específicas (ex.: Parquet).",
+      "palavras_chave": ["linha", "coluna", "parquet"],
+      "fonte": "2 - Introdução a Engenharia de Dados.pdf",
+      "paginas": [10, 11]
+    }
+  },
+  {
+    "inputs": {"question": "Qual a diferença entre Data Warehouse e Data Lake?"},
+    "expectations": {
+      "resposta_esperada": "Data Warehouses armazenam dados processados para análise (ex.: relatórios prontos); Data Lakes armazenam dados brutos em grande escala (ex.: logs não processados).",
+      "palavras_chave": ["processad", "brut"],
+      "fonte": "2 - Introdução a Engenharia de Dados.pdf",
+      "paginas": [16]
+    }
+  },
+  {
+    "inputs": {"question": "O que significa a sigla ACID em transações de banco de dados?"},
+    "expectations": {
+      "resposta_esperada": "Atomicidade (a transação ocorre completamente ou não ocorre), Consistência (o banco permanece em estado válido), Isolamento (transações simultâneas não interferem entre si) e Durabilidade (após confirmada, a transação persiste mesmo após falhas).",
+      "palavras_chave": ["atomicidade", "consistência", "isolamento", "durabilidade"],
+      "fonte": "2 - Introdução a Engenharia de Dados.pdf",
+      "paginas": [20]
+    }
+  },
+  {
+    "inputs": {"question": "Qual a diferença entre OLTP e OLAP?"},
+    "expectations": {
+      "resposta_esperada": "OLTP é o processamento transacional, com consultas rápidas (inserir, atualizar, deletar), foco em baixa latência e alta disponibilidade. OLAP é o processamento analítico, com consultas complexas em grandes volumes de dados, foco em throughput, usado em relatórios e treinamento de modelos.",
+      "palavras_chave": ["transacion", "analític", "latência"],
+      "fonte": "2 - Introdução a Engenharia de Dados.pdf",
+      "paginas": [20, 21, 22]
+    }
+  },
+  {
+    "inputs": {"question": "Qual a diferença entre ETL e ELT?"},
+    "expectations": {
+      "resposta_esperada": "No ETL os dados são transformados antes de serem carregados no destino, dando maior controle na ingestão. No ELT os dados são carregados primeiro (ex.: em um data lake) e transformados depois, sendo mais flexível e adequado para grandes volumes.",
+      "palavras_chave": ["transform", "antes", "depois"],
+      "fonte": "2 - Introdução a Engenharia de Dados.pdf",
+      "paginas": [25, 26, 27]
+    }
+  },
+  {
+    "inputs": {"question": "Quais são as camadas do pipeline de transformação de dados e suas vantagens?"},
+    "expectations": {
+      "resposta_esperada": "Raw -> Staging (Bronze) -> Curated (Silver) -> Analytics (Gold). As vantagens são reprocessamento, auditabilidade e governança.",
+      "palavras_chave": ["bronze", "silver", "gold"],
+      "fonte": "2 - Introdução a Engenharia de Dados.pdf",
+      "paginas": [28]
+    }
+  },
+  {
+    "inputs": {"question": "Quais são as principais etapas da engenharia de features?"},
+    "expectations": {
+      "resposta_esperada": "Modelagem, Extração, Transformação, Seleção e Armazenamento e Avaliação (Feature Store).",
+      "palavras_chave": ["modelagem", "extração", "transformação", "seleção", "armazenamento"],
+      "fonte": "4 - Engenharia de Features.pdf",
+      "paginas": [5]
+    }
+  },
+  {
+    "inputs": {"question": "O que são boas features?"},
+    "expectations": {
+      "resposta_esperada": "São features que melhoram o desempenho do modelo, reduzem a complexidade computacional, representam conhecimento de domínio e auxiliam na interpretabilidade.",
+      "palavras_chave": ["desempenho", "complexidade", "interpretabilidade"],
+      "fonte": "4 - Engenharia de Features.pdf",
+      "paginas": [4]
+    }
+  },
+  {
+    "inputs": {"question": "Por que algoritmos como k-NN e k-means precisam de normalização das features?"},
+    "expectations": {
+      "resposta_esperada": "Porque são algoritmos baseados em distância, e a normalização coloca as features em escalas comparáveis.",
+      "palavras_chave": ["distância", "escala"],
+      "fonte": "4 - Engenharia de Features.pdf",
+      "paginas": [14]
+    }
+  },
+  {
+    "inputs": {"question": "O que é um Feature Store e quais são seus benefícios?"},
+    "expectations": {
+      "resposta_esperada": "É um repositório centralizado para gerenciar, armazenar e compartilhar features e seus metadados. Benefícios: evita retrabalho, garante consistência entre treinamento e inferência, ajuda na governança e reduz custo.",
+      "palavras_chave": ["repositório", "consistência", "governança"],
+      "fonte": "4 - Engenharia de Features.pdf",
+      "paginas": [18]
+    }
+  },
+  {
+    "inputs": {"question": "Como funciona o algoritmo de backpropagation em redes neurais?"},
+    "expectations": {
+      "resposta_esperada": "Não encontrei essa informação no material da disciplina.",
+      "palavras_chave": ["não encontrei"],
+      "deve_responder": false
+    }
+  }
+]
