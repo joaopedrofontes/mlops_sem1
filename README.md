@@ -32,17 +32,17 @@ make register                  # (opcional) cria uma nova versão do modelo com 
 ```mermaid
 flowchart LR
     U[Usuário] --> APP["Streamlit (:8501)"]
-    APP -->|"embeddings + chat"| OLL["Ollama (:11434)<br/>qwen2.5:1.5b + nomic-embed-text"]
-    APP -->|"traces, feedback, prompts"| MLF["MLflow Server (:5000)"]
+    APP -->|"chat-mlops + embed-mlops<br/>traces, feedback, prompts"| MLF["MLflow Server + AI Gateway (:5000)"]
+    MLF -->|"roteia chamadas de LLM"| OLL["Ollama (:11434)<br/>qwen2.5:1.5b + nomic-embed-text"]
     PDF["data/docs/*.pdf"] --> ING[ingest.py] --> IDX[(índice vetorial)]
     IDX --> APP
-    ING -->|"params, métricas, artefatos"| MLF
+    ING -->|"embed-mlops + params/artefatos"| MLF
     MLF -->|"models:/rag-mlops@champion"| SRV["mlflow models serve (:5001)"]
 ```
 
-- **Ollama (`:11434`):** serve os pesos brutos do LLM (`qwen2.5:1.5b`) e do modelo de embeddings (`nomic-embed-text`) via API compatível com a da OpenAI.
-- **MLflow Server (`:5000`):** centraliza o *Experiment Tracking*, *Prompt Registry*, *Traces*, *Feedback humano*, *Evaluations* e *Model Registry*.
-- **Streamlit (`:8501`):** interface de chat que busca o prompt ativo no MLflow, consulta o índice local + Ollama e grava os traces e avaliações (👍/👎) no MLflow.
+- **Ollama (`:11434`):** hospeda os pesos brutos do LLM (`qwen2.5:1.5b`) e do modelo de embeddings (`nomic-embed-text`).
+- **MLflow Server + AI Gateway (`:5000`):** centraliza o *AI Gateway* (que recebe todas as chamadas de LLM nos endpoints lógicos `chat-mlops` e `embed-mlops` e roteia para o Ollama), além do *Experiment Tracking*, *Prompt Registry*, *Traces*, *Feedback humano*, *Evaluations* e *Model Registry*.
+- **Streamlit (`:8501`):** interface de chat que busca o prompt ativo no MLflow, chama o **MLflow AI Gateway** para embeddings e chat, e grava os traces e avaliações (👍/👎) no MLflow.
 - **Model Serving (`:5001`):** serve o pipeline RAG completo empacotado no Model Registry (`models:/rag-mlops@champion`) como uma API REST (`/invocations`).
 
 ---
@@ -51,6 +51,7 @@ flowchart LR
 
 | Etapa | Ferramenta do MLflow | Onde no código | O que demonstra em LLMOps |
 |---|---|---|---|
+| 0. Roteamento | **AI Gateway** | [gateway.py](src/gateway.py), [llm.py](src/llm.py) | Proxy centralizado com endpoints lógicos (`chat-mlops`, `embed-mlops`), gestão de credenciais, *usage tracking* e desacoplamento do provedor |
 | 1. Ingestão | **Experiment Tracking** | [ingest.py](src/ingest.py) | Parâmetros do RAG (`chunk_size`, `overlap`, modelo de embedding), métricas e índice salvo como artefato |
 | 2. Prompt | **Prompt Registry** | [prompts.py](src/prompts.py) | Versionamento de prompt (`v1`, `v2`...) + alias `production` desacoplado do código |
 | 3. Execução | **Tracing** (`autolog` + `@mlflow.trace`) | [rag.py](src/rag.py) | Observabilidade por *spans*: busca vetorial (chunks e scores), prompt formatado, tokens e latência |
@@ -69,10 +70,11 @@ flowchart LR
 ### 1. Coloque os slides na pasta `data/docs/`
 Copie os dois PDFs listados na seção [Materiais da disciplina](#-materiais-da-disciplina-datadocs) para `data/docs/`.
 
-### 2. Suba a infraestrutura e baixe os modelos
+### 2. Suba a infraestrutura, baixe os modelos e configure o AI Gateway
 ```bash
-make up
+make up                      # sobe Ollama + MLflow, baixa os modelos, roda src.gateway e sobe o Streamlit
 ```
+*(Se quiser apenas reconfigurar os endpoints do AI Gateway depois de mudar o `.env`, rode `make gateway`).*
 
 ### 3. Execute o pipeline de LLMOps
 ```bash
@@ -113,6 +115,7 @@ curl -X POST http://localhost:5001/invocations \
 
 ## 🎤 Roteiro de demonstração (apresentação)
 
+0. **AI Gateway:** abrir a aba **AI Gateway** no menu lateral do MLflow (`http://localhost:5000/#/gateway`) e mostrar os endpoints `chat-mlops` e `embed-mlops`, as *Model Definitions* apontando para o Ollama, o *Secret* `ollama-local` criptografado e os gráficos de **Usage** (contagem de requisições, latência e tokens que passaram pelo Gateway).
 1. **Tracking (`ingestao`):** no experimento `rag-mlops`, abrir o run `ingestao` e mostrar os parâmetros (`chunk_size`, `embed_model`), métricas (`num_paginas=51`, `num_chunks=50`) e o artefato `index/`.
 2. **Tracing:** na aba **Traces**, abrir uma pergunta feita no Streamlit e expandir a árvore `answer` → `retrieve` (mostrando os 4 slides recuperados com seus scores) → `Embeddings` → `Completions` (prompt montado, tokens e tempo).
 3. **Feedback humano:** clicar em 👍 ou 👎 no Streamlit e atualizar o trace no MLflow para mostrar o `feedback_usuario` anexado.
@@ -133,7 +136,8 @@ curl -X POST http://localhost:5001/invocations \
 │   └── eval_set.json     # 12 perguntas e gabaritos baseados nas Aulas 2 e 4
 └── src/
     ├── config.py         # Configurações centrais e conexão com o MLflow
-    ├── llm.py            # Cliente do Ollama (API compatível com OpenAI)
+    ├── gateway.py        # Etapa 0 - Configuração dos endpoints no MLflow AI Gateway
+    ├── llm.py            # Cliente de LLM/Embeddings apontando para o MLflow AI Gateway
     ├── ingest.py         # Etapa 1 - Ingestão dos PDFs + Experiment Tracking
     ├── prompts.py        # Etapa 2 - Registro e versionamento no Prompt Registry
     ├── rag.py            # Pipeline RAG instrumentado com MLflow Tracing

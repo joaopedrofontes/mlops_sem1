@@ -11,9 +11,12 @@ EVAL_FILE = ROOT / "data" / "eval_set.json"
 
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+MLFLOW_GATEWAY_URL = os.getenv("MLFLOW_GATEWAY_URL", f"{MLFLOW_TRACKING_URI}/gateway/openai/v1")
 
 LLM_MODEL = os.getenv("LLM_MODEL", "qwen2.5:1.5b")
 EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
+CHAT_ENDPOINT = os.getenv("CHAT_ENDPOINT", "chat-mlops")
+EMBED_ENDPOINT = os.getenv("EMBED_ENDPOINT", "embed-mlops")
 
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "800"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "150"))

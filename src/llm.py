@@ -1,23 +1,29 @@
-"""Cliente do LLM local (Ollama expõe uma API compatível com a da OpenAI)."""
+"""
+Cliente de LLM e Embeddings via MLflow AI Gateway.
+
+A aplicação NÃO se conecta diretamente ao Ollama e nem precisa saber qual modelo
+físico está rodando: ela envia requisições OpenAI-compatíveis para o AI Gateway
+do MLflow (`http://mlflow:5000/gateway/openai/v1`) chamando os endpoints lógicos
+`chat-mlops` e `embed-mlops`, e o Gateway roteia para o provedor configurado.
+"""
 import numpy as np
 from openai import OpenAI
 
-from src.config import EMBED_MODEL, LLM_MODEL, OLLAMA_BASE_URL
+from src.config import CHAT_ENDPOINT, EMBED_ENDPOINT, MLFLOW_GATEWAY_URL
 
-# A chave é ignorada pelo Ollama; timeout evita esperar 10 min se algo travar
-client = OpenAI(base_url=OLLAMA_BASE_URL, api_key="ollama", timeout=180, max_retries=1)
+client = OpenAI(base_url=MLFLOW_GATEWAY_URL, api_key="mlflow", timeout=180, max_retries=1)
 
 
 def embed(texts: list[str]) -> np.ndarray:
-    """Gera embeddings normalizados (norma 1) para uma lista de textos."""
-    resp = client.embeddings.create(model=EMBED_MODEL, input=texts)
+    """Gera embeddings normalizados (norma 1) via endpoint do MLflow AI Gateway."""
+    resp = client.embeddings.create(model=EMBED_ENDPOINT, input=texts)
     vecs = np.array([d.embedding for d in resp.data], dtype=np.float32)
     return vecs / np.linalg.norm(vecs, axis=1, keepdims=True)
 
 
 def chat(messages: list[dict], temperature: float = 0.1) -> str:
-    """Envia mensagens ao LLM e devolve o texto da resposta."""
+    """Envia mensagens ao endpoint de chat do MLflow AI Gateway."""
     resp = client.chat.completions.create(
-        model=LLM_MODEL, messages=messages, temperature=temperature
+        model=CHAT_ENDPOINT, messages=messages, temperature=temperature
     )
     return resp.choices[0].message.content.strip()

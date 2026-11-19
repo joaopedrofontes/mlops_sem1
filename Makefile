@@ -1,11 +1,15 @@
 RUN = docker compose run --rm app python -m
 
-.PHONY: up down ingest prompt ask eval register serve logs
+.PHONY: up down gateway ingest prompt ask eval register serve logs reset
 
-up:        ## Sobe Ollama, MLflow e o chat (baixa os modelos na 1ª vez)
+up:        ## Sobe Ollama, MLflow, configura o AI Gateway e sobe o chat
 	docker compose up -d ollama mlflow
 	docker compose up ollama-pull
+	$(RUN) src.gateway
 	docker compose up -d app
+
+gateway:   ## Etapa 0 - registra/atualiza os endpoints do Ollama no MLflow AI Gateway
+	$(RUN) src.gateway
 
 ingest:    ## Etapa 1 - indexa os PDFs de data/docs
 	$(RUN) src.ingest
